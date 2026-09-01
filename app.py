@@ -17,48 +17,53 @@ st.title("Bitácora de Primeros Auxilios 🚑")
 CARGOS = ["Operario de producción", "Ayudante", "Maestro", "Encargado de turno", "Jefe producción", "Jefe de planta", "Jefe operaciones", "Auxiliar de aseo", "Monitor de calidad", "Jefe calidad"]
 AREAS = ["Bodega", "Masas", "Corte", "Horno", "Envasado", "Calidad", "Operaciones", "Mantención", "Administrativo"]
 ENCARGADOS = ["Luis Mejias", "Rox Peñaloza", "Lesdamar Barbosa", "Macarena Garay", "Carlos González", "Franco Pistolese", "Junior Gutiérrez"]
-PLANTAS = ["La Florida", "Quilicura"]
+PLANTAS = ["La Florida", "Loginsa"]
 LESIONES = ["Herida cortante", "Herida abrasiva", "Quemadura", "Contusión", "Muscular", "Desgarro"]
 PARTES_CUERPO = ["Manos", "Dedos", "Brazo", "Cabeza", "Ojos", "Pierna", "Pie"]
 INSUMOS_DISPONIBLES = ["Gasa 5x5 cm", "Gasa 7,5x7,5", "Apósito", "Venda gasa elasticada", "Tela adhesiva papel", "Tela adhesiva transpore", "Sutura cutánea", "Compresa fría", "Gasa parafinada", "Toallita de alcohol"]
 
-# 3. Formulario de Registro
+# 3. Formulario de Registro (clear_on_submit vacía todo al guardar)
 with st.form("registro_form", clear_on_submit=True):
     st.subheader("Datos del Afectado y Accidente")
     
     col1, col2 = st.columns(2)
     with col1:
-        nombre = st.text_input("Nombre del Afectado*")
-        rut = st.text_input("RUT")
-        cargo = st.selectbox("Cargo", CARGOS)
-        area = st.selectbox("Área", AREAS)
-        encargado = st.selectbox("Encargado de Turno", ENCARGADOS)
+        # Texto libre solo para el nombre. Se elimina el RUT.
+        nombre = st.text_input("Nombre y Apellido*")
+        
+        # Volvemos a las listas, pero partiendo en blanco (index=None)
+        cargo = st.selectbox("Cargo", CARGOS, index=None, placeholder="Seleccione...")
+        area = st.selectbox("Área", AREAS, index=None, placeholder="Seleccione...")
+        encargado = st.selectbox("Encargado de Turno", ENCARGADOS, index=None, placeholder="Seleccione...")
     
     with col2:
-        planta = st.selectbox("Planta", PLANTAS)
+        planta = st.selectbox("Planta", PLANTAS, index=None, placeholder="Seleccione...")
+        
+        # Dejamos fecha y hora actual por defecto
         fecha = st.date_input("Fecha", datetime.date.today())
         hora = st.time_input("Hora", datetime.datetime.now().time())
-        tipo_lesion = st.selectbox("Tipo de Lesión", LESIONES)
-        parte_cuerpo = st.selectbox("Parte del Cuerpo Lesionada", PARTES_CUERPO)
-        derivacion_achs = st.radio("¿Derivación ACHS?", ["No", "Sí"])
+        
+        tipo_lesion = st.selectbox("Tipo de Lesión*", LESIONES, index=None, placeholder="Seleccione...")
+        parte_cuerpo = st.selectbox("Parte del Cuerpo Lesionada*", PARTES_CUERPO, index=None, placeholder="Seleccione...")
+        derivacion_achs = st.selectbox("¿Derivación ACHS?*", ["No", "Sí"], index=None, placeholder="Seleccione...")
 
     st.divider()
     st.subheader("Insumos Utilizados")
     
-    # Multiselect reemplaza las 5 columnas del Excel y permite agregar de 1 a N insumos
-    insumos_seleccionados = st.multiselect("Seleccione los insumos (puede elegir varios)", INSUMOS_DISPONIBLES)
+    insumos_seleccionados = st.multiselect("Seleccione los insumos (puede elegir varios)", INSUMOS_DISPONIBLES, placeholder="Haga clic para seleccionar...")
     
+    # Botón de guardado
     submit_button = st.form_submit_button(label="Registrar Accidente")
 
-# 4. Lógica de inserción en Base de Datos
+# 4. Lógica de inserción en Base de Datos y bloqueo de duplicados
 if submit_button:
-    if not nombre.strip():
-        st.error("El nombre del afectado es un campo obligatorio.")
+    # Validación para evitar doble clic o registros vacíos
+    if not nombre.strip() or not tipo_lesion or not parte_cuerpo or not derivacion_achs:
+        st.warning("⚠️ Por favor, complete todos los campos obligatorios (*) antes de guardar.")
     else:
-        # Preparar data de la tabla cabecera
+        # Preparar data de la tabla cabecera (Ya no enviamos la variable rut)
         cabecera_data = {
             "nombre": nombre,
-            "rut": rut,
             "cargo": cargo,
             "area": area,
             "encargado_turno": encargado,
@@ -74,11 +79,11 @@ if submit_button:
             # Insertar en botiquin_cabecera
             response_cab = supabase.table("botiquin_cabecera").insert(cabecera_data).execute()
             
-            # Validar que se creó correctamente y rescatar el ID generado
+            # Validar que se creó correctamente
             if response_cab.data:
                 nuevo_id = response_cab.data[0]['id']
                 
-                # Insertar en botiquin_detalle si se seleccionaron insumos
+                # Insertar insumos si se seleccionaron
                 if insumos_seleccionados:
                     detalles_data = [
                         {"cabecera_id": nuevo_id, "insumo": item, "cantidad": 1} 
@@ -86,7 +91,7 @@ if submit_button:
                     ]
                     supabase.table("botiquin_detalle").insert(detalles_data).execute()
                     
-                st.success(f"✅ Registro de {nombre} guardado correctamente (ID: {nuevo_id}).")
+                st.success(f"✅ Registro de {nombre} guardado correctamente. El formulario está listo para un nuevo ingreso.")
             else:
                 st.error("No se pudo obtener la respuesta de la base de datos.")
                 
