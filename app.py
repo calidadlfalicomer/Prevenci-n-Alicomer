@@ -12,9 +12,14 @@ def init_connection():
 
 supabase: Client = init_connection()
 
+# 2. Mostrar mensaje de éxito si viene de un guardado exitoso anterior
+if "exito" in st.session_state:
+    st.success(st.session_state["exito"])
+    del st.session_state["exito"] # Lo borramos para que no se quede pegado
+
 st.title("Bitácora de Primeros Auxilios 🚑")
 
-# 2. Listas de valores (Actualizadas con nuevos cargos y "Otro" en lesiones)
+# 3. Listas de valores
 CARGOS = ["Operario de producción", "Ayudante", "Maestro", "Encargado de turno", "Jefe producción", "Jefe de planta", "Jefe operaciones", "Auxiliar de aseo", "Monitor de calidad", "Jefe calidad", "Lavado de bandejas", "Administrativo", "Bodeguero"]
 AREAS = ["Bodega", "Masas", "Corte", "Horno", "Envasado", "Calidad", "Operaciones", "Mantención", "Administrativo"]
 PLANTAS = ["La Florida", "Quilicura"]
@@ -22,48 +27,45 @@ LESIONES = ["Herida cortante", "Herida abrasiva", "Quemadura", "Contusión", "Mu
 PARTES_CUERPO = ["Manos", "Dedos", "Brazo", "Cabeza", "Ojos", "Pierna", "Pie"]
 INSUMOS_DISPONIBLES = ["Gasa 5x5 cm", "Gasa 7,5x7,5", "Apósito", "Venda gasa elasticada", "Tela adhesiva papel", "Tela adhesiva transpore", "Sutura cutánea", "Compresa fría", "Gasa parafinada", "Toallita de alcohol"]
 
-# 3. Formulario de Registro
-with st.form("registro_form", clear_on_submit=True):
-    st.subheader("Datos del Afectado y Accidente")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        nombre = st.text_input("Nombre y Apellido Afectado*")
-        cargo = st.selectbox("Cargo", CARGOS, index=None, placeholder="Seleccione...")
-        area = st.selectbox("Área", AREAS, index=None, placeholder="Seleccione...")
-        encargado = st.text_input("Nombre y Apellido Encargado de Turno")
-    
-    with col2:
-        planta = st.selectbox("Planta", PLANTAS, index=None, placeholder="Seleccione...")
-        
-        # Ajuste para que la hora por defecto sea siempre la local de Chile
-        zona_chile = ZoneInfo("America/Santiago")
-        ahora = datetime.datetime.now(zona_chile)
-        
-        fecha = st.date_input("Fecha", ahora.date())
-        hora = st.time_input("Hora", ahora.time())
-        
-        # Selección de Lesión con opción "Otro"
-        tipo_lesion = st.selectbox("Tipo de Lesión*", LESIONES, index=None, placeholder="Seleccione...")
-        
-        lesion_final = tipo_lesion
-        if tipo_lesion == "Otro":
-            lesion_final = st.text_input("Especifique el tipo de lesión*")
-            
-        parte_cuerpo = st.selectbox("Parte del Cuerpo Lesionada*", PARTES_CUERPO, index=None, placeholder="Seleccione...")
-        derivacion_achs = st.selectbox("¿Derivación ACHS?*", ["No", "Sí"], index=None, placeholder="Seleccione...")
+# 4. Interfaz de Registro (Sin st.form para permitir campos dinámicos)
+st.subheader("Datos del Afectado y Accidente")
 
-    st.divider()
-    st.subheader("Insumos Utilizados")
-    
-    insumos_seleccionados = st.multiselect("Seleccione los insumos (puede elegir varios)", INSUMOS_DISPONIBLES, placeholder="Haga clic para seleccionar...")
-    
-    # Botón de guardado
-    submit_button = st.form_submit_button(label="Registrar Accidente")
+col1, col2 = st.columns(2)
+with col1:
+    nombre = st.text_input("Nombre y Apellido Afectado*", key="nombre")
+    cargo = st.selectbox("Cargo", CARGOS, index=None, placeholder="Seleccione...", key="cargo")
+    area = st.selectbox("Área", AREAS, index=None, placeholder="Seleccione...", key="area")
+    encargado = st.text_input("Nombre y Apellido Encargado de Turno", key="encargado")
 
-# 4. Lógica de inserción en Base de Datos y validaciones
+with col2:
+    planta = st.selectbox("Planta", PLANTAS, index=None, placeholder="Seleccione...", key="planta")
+    
+    zona_chile = ZoneInfo("America/Santiago")
+    ahora = datetime.datetime.now(zona_chile)
+    
+    fecha = st.date_input("Fecha", ahora.date(), key="fecha")
+    hora = st.time_input("Hora", ahora.time(), key="hora")
+    
+    # Campo interactivo de Lesión
+    tipo_lesion = st.selectbox("Tipo de Lesión*", LESIONES, index=None, placeholder="Seleccione...", key="tipo_lesion")
+    
+    lesion_final = tipo_lesion
+    if tipo_lesion == "Otro":
+        lesion_final = st.text_input("Especifique el tipo de lesión*", key="lesion_otro")
+        
+    parte_cuerpo = st.selectbox("Parte del Cuerpo Lesionada*", PARTES_CUERPO, index=None, placeholder="Seleccione...", key="parte_cuerpo")
+    derivacion_achs = st.selectbox("¿Derivación ACHS?*", ["No", "Sí"], index=None, placeholder="Seleccione...", key="derivacion_achs")
+
+st.divider()
+st.subheader("Insumos Utilizados")
+
+insumos_seleccionados = st.multiselect("Seleccione los insumos (puede elegir varios)", INSUMOS_DISPONIBLES, placeholder="Haga clic para seleccionar...", key="insumos")
+
+# Botón de guardado (primary lo pinta de color para que destaque)
+submit_button = st.button("Registrar Accidente", type="primary")
+
+# 5. Lógica de inserción en Base de Datos y limpieza manual
 if submit_button:
-    # Validación reforzada para incluir el campo de texto cuando se elige "Otro"
     if not nombre.strip() or not lesion_final or (tipo_lesion == "Otro" and not lesion_final.strip()) or not parte_cuerpo or not derivacion_achs:
         st.warning("⚠️ Por favor, complete todos los campos obligatorios (*) antes de guardar.")
     else:
@@ -74,7 +76,7 @@ if submit_button:
             "encargado_turno": encargado,
             "planta": planta,
             "fecha": str(fecha),
-            "hora": str(hora.strftime("%H:%M:%S")), # Formateado seguro para base de datos
+            "hora": str(hora.strftime("%H:%M:%S")),
             "tipo_lesion": lesion_final,
             "parte_cuerpo": parte_cuerpo,
             "derivacion_achs": True if derivacion_achs == "Sí" else False
@@ -92,8 +94,17 @@ if submit_button:
                         for item in insumos_seleccionados
                     ]
                     supabase.table("botiquin_detalle").insert(detalles_data).execute()
-                    
-                st.success(f"✅ Registro de {nombre} guardado correctamente. El formulario está listo para un nuevo ingreso.")
+                
+                # Limpiamos todos los campos reseteando la memoria
+                campos_a_limpiar = ["nombre", "cargo", "area", "encargado", "planta", "tipo_lesion", "lesion_otro", "parte_cuerpo", "derivacion_achs", "insumos"]
+                for key in campos_a_limpiar:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                
+                # Guardamos el mensaje de éxito y recargamos la app entera
+                st.session_state["exito"] = f"✅ Registro de {nombre} guardado correctamente. El formulario está listo para un nuevo ingreso."
+                st.rerun()
+                
             else:
                 st.error("No se pudo obtener la respuesta de la base de datos.")
                 
