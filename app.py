@@ -13,10 +13,9 @@ supabase: Client = init_connection()
 
 st.title("Bitácora de Primeros Auxilios 🚑")
 
-# 2. Listas de valores extraídas de tu Excel
+# 2. Listas de valores extraídas de tu Excel (Actualizado Loginsa a Quilicura)
 CARGOS = ["Operario de producción", "Ayudante", "Maestro", "Encargado de turno", "Jefe producción", "Jefe de planta", "Jefe operaciones", "Auxiliar de aseo", "Monitor de calidad", "Jefe calidad"]
 AREAS = ["Bodega", "Masas", "Corte", "Horno", "Envasado", "Calidad", "Operaciones", "Mantención", "Administrativo"]
-ENCARGADOS = ["Luis Mejias", "Rox Peñaloza", "Lesdamar Barbosa", "Macarena Garay", "Carlos González", "Franco Pistolese", "Junior Gutiérrez"]
 PLANTAS = ["La Florida", "Quilicura"]
 LESIONES = ["Herida cortante", "Herida abrasiva", "Quemadura", "Contusión", "Muscular", "Desgarro"]
 PARTES_CUERPO = ["Manos", "Dedos", "Brazo", "Cabeza", "Ojos", "Pierna", "Pie"]
@@ -28,21 +27,16 @@ with st.form("registro_form", clear_on_submit=True):
     
     col1, col2 = st.columns(2)
     with col1:
-        # Texto libre solo para el nombre. Se elimina el RUT.
-        nombre = st.text_input("Nombre y Apellido*")
-        
-        # Volvemos a las listas, pero partiendo en blanco (index=None)
+        # Texto libre para afectado y encargado
+        nombre = st.text_input("Nombre y Apellido Afectado*")
         cargo = st.selectbox("Cargo", CARGOS, index=None, placeholder="Seleccione...")
         area = st.selectbox("Área", AREAS, index=None, placeholder="Seleccione...")
-        encargado = st.selectbox("Encargado de Turno", ENCARGADOS, index=None, placeholder="Seleccione...")
+        encargado = st.text_input("Nombre y Apellido Encargado de Turno")
     
     with col2:
         planta = st.selectbox("Planta", PLANTAS, index=None, placeholder="Seleccione...")
-        
-        # Dejamos fecha y hora actual por defecto
         fecha = st.date_input("Fecha", datetime.date.today())
         hora = st.time_input("Hora", datetime.datetime.now().time())
-        
         tipo_lesion = st.selectbox("Tipo de Lesión*", LESIONES, index=None, placeholder="Seleccione...")
         parte_cuerpo = st.selectbox("Parte del Cuerpo Lesionada*", PARTES_CUERPO, index=None, placeholder="Seleccione...")
         derivacion_achs = st.selectbox("¿Derivación ACHS?*", ["No", "Sí"], index=None, placeholder="Seleccione...")
@@ -57,11 +51,10 @@ with st.form("registro_form", clear_on_submit=True):
 
 # 4. Lógica de inserción en Base de Datos y bloqueo de duplicados
 if submit_button:
-    # Validación para evitar doble clic o registros vacíos
     if not nombre.strip() or not tipo_lesion or not parte_cuerpo or not derivacion_achs:
         st.warning("⚠️ Por favor, complete todos los campos obligatorios (*) antes de guardar.")
     else:
-        # Preparar data de la tabla cabecera (Ya no enviamos la variable rut)
+        # Preparar data de la tabla cabecera
         cabecera_data = {
             "nombre": nombre,
             "cargo": cargo,
