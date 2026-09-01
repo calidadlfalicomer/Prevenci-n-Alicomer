@@ -5,8 +5,8 @@ import datetime
 # 1. Conexión a Supabase
 @st.cache_resource
 def init_connection():
-    url = st.secrets["https://omnidohqmibwunxvkfqw.supabase.co"]
-    key = st.secrets["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tbmlkb2hxbWlid3VueHZrZnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzQ1MDQsImV4cCI6MjEwMzg1MDUwNH0.mS1KBma1RDkHTRRDoB84mjXvLSFM1rAHf-7F8zwUAag"]
+    url = st.secrets[""]
+    key = st.secrets[""]
     return create_client(url, key)
 
 supabase: Client = init_connection()
