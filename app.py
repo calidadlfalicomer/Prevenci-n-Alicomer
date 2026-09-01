@@ -17,7 +17,7 @@ st.title("Bitácora de Primeros Auxilios 🚑")
 CARGOS = ["Operario de producción", "Ayudante", "Maestro", "Encargado de turno", "Jefe producción", "Jefe de planta", "Jefe operaciones", "Auxiliar de aseo", "Monitor de calidad", "Jefe calidad"]
 AREAS = ["Bodega", "Masas", "Corte", "Horno", "Envasado", "Calidad", "Operaciones", "Mantención", "Administrativo"]
 ENCARGADOS = ["Luis Mejias", "Rox Peñaloza", "Lesdamar Barbosa", "Macarena Garay", "Carlos González", "Franco Pistolese", "Junior Gutiérrez"]
-PLANTAS = ["La Florida", "Loginsa"]
+PLANTAS = ["La Florida", "Quilicura"]
 LESIONES = ["Herida cortante", "Herida abrasiva", "Quemadura", "Contusión", "Muscular", "Desgarro"]
 PARTES_CUERPO = ["Manos", "Dedos", "Brazo", "Cabeza", "Ojos", "Pierna", "Pie"]
 INSUMOS_DISPONIBLES = ["Gasa 5x5 cm", "Gasa 7,5x7,5", "Apósito", "Venda gasa elasticada", "Tela adhesiva papel", "Tela adhesiva transpore", "Sutura cutánea", "Compresa fría", "Gasa parafinada", "Toallita de alcohol"]
